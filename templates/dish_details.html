@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}{{ dish.name }} - Restaurant Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Dish Header -->
+    <div class="dish-header">
+        <img src="{{ dish.image_url }}" alt="{{ dish.name }}" class="dish-image">
+        <div class="dish-info">
+            <h2>{{ dish.name }}</h2>
+            <span class="dish-card-category mb-3">{{ dish.category }}</span>
+            <p class="mb-4">{{ dish.description if dish.description else 'No description available for this dish.' }}</p>
+            <div class="d-flex align-items-center mb-4">
+                <span class="dish-card-price me-3">${{ "%.2f"|format(dish.price) }}</span>
+                <span class="badge bg-light text-secondary border">{{ dish.category.capitalize() }}</span>
+            </div>
+            <div class="mt-2">
+                <a href="{{ url_for('dish_management') }}" class="btn btn-outline-secondary">
+                    <i data-feather="arrow-left" class="feather-sm me-1"></i> Back to Menu
+                </a>
+                {% if current_user.is_admin() %}
+                <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i data-feather="trash-2" class="feather-sm me-1"></i> Delete Dish
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dish Stats -->
+    <div class="dish-stats my-4">
+        <div class="dish-stat-item">
+            <div class="dish-stat-card">
+                <div class="dish-stat-value">{{ dish.get_avg_sales()|round(1) }}</div>
+                <div class="dish-stat-label">Average Daily Sales</div>
+                <p class="small text-muted mt-2">units per day</p>
+            </div>
+        </div>
+        
+        <div class="dish-stat-item">
+            <div class="dish-stat-card">
+                <div class="dish-stat-value" style="color: var(--danger);">{{ dish.get_avg_waste()|round(1) }}</div>
+                <div class="dish-stat-label">Average Waste</div>
+                <p class="small text-muted mt-2">units per day</p>
+            </div>
+        </div>
+        
+        <div class="dish-stat-item">
+            <div class="dish-stat-card">
+                {% set waste_ratio = (dish.get_avg_waste() / (dish.get_avg_sales() + 0.001)) * 100 %}
+                <div class="dish-stat-value" style="{% if waste_ratio > 30 %}color: var(--danger){% elif waste_ratio > 10 %}color: var(--warning){% else %}color: var(--success){% endif %}">
+                    {{ waste_ratio|round(1) }}%
+                </div>
+                <div class="dish-stat-label">Waste Ratio</div>
+                <p class="small text-muted mt-2">of sales volume</p>
+            </div>
+        </div>
+        
+        <div class="dish-stat-item">
+            <div class="dish-stat-card">
+                <div class="dish-stat-value" style="color: var(--success);">${{ (dish.get_avg_sales() * dish.price)|round(2) }}</div>
+                <div class="dish-stat-label">Daily Revenue</div>
+                <p class="small text-muted mt-2">average per day</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ML Predictions -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i data-feather="zap" class="feather-sm me-2"></i>
+                        ML-Powered Performance Predictions
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Time</th>
+                                        <th>Sales Prediction</th>
+                                        <th>Waste Prediction</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pred in predictions %}
+                                    <tr>
+                                        <td>{{ pred.day_name }}</td>
+                                        <td>{{ pred.time_of_day.capitalize() }}</td>
+                                        <td>
+                                            <span class="badge prediction-{{ pred.sales_prediction }}">
+                                                {{ pred.sales_prediction.upper() }}
+                                            </span>
+                                            <small class="text-muted ms-1">({{ pred.sales_confidence|round }}% confidence)</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge prediction-{{ pred.waste_prediction }}">
+                                                {{ pred.waste_prediction.upper() }}
+                                            </span>
+                                            <small class="text-muted ms-1">({{ pred.waste_confidence|round }}% confidence)</small>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">
+                                            <div class="alert alert-info mb-0">
+                                                <i data-feather="info" class="feather-sm me-2"></i>
+                                                No predictions available yet. Add at least 5 daily data entries to generate ML predictions.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-primary">
+                                <h6 class="alert-heading">Prediction Insights</h6>
+                                <p>Our ML model analyzes historical sales and waste data to predict performance and optimize inventory.</p>
+                                <hr>
+                                <p class="mb-0"><strong>Best Day:</strong> 
+                                    {% set best_day = None %}
+                                    {% set best_confidence = 0 %}
+                                    {% for pred in predictions if pred.sales_prediction == 'high' %}
+                                        {% if pred.sales_confidence > best_confidence %}
+                                            {% set best_day = pred.day_name %}
+                                            {% set best_time = pred.time_of_day %}
+                                            {% set best_confidence = pred.sales_confidence %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if best_day %}
+                                        {{ best_day }} ({{ best_time.capitalize() }})
+                                    {% else %}
+                                        Not enough data
+                                    {% endif %}
+                                </p>
+                                <p class="mb-0"><strong>Highest Waste:</strong>
+                                    {% set worst_day = None %}
+                                    {% set worst_confidence = 0 %}
+                                    {% for pred in predictions if pred.waste_prediction == 'high' %}
+                                        {% if pred.waste_confidence > worst_confidence %}
+                                            {% set worst_day = pred.day_name %}
+                                            {% set worst_time = pred.time_of_day %}
+                                            {% set worst_confidence = pred.waste_confidence %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if worst_day %}
+                                        {{ worst_day }} ({{ worst_time.capitalize() }})
+                                    {% else %}
+                                        Not enough data
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historical Data -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i data-feather="calendar" class="feather-sm me-2"></i>
+                        Historical Data
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Day</th>
+                                    <th>Time</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Quantity Wasted</th>
+                                    <th>Waste Ratio</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in daily_data %}
+                                <tr>
+                                    <td>{{ data.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                                        {{ days[data.day_of_week] }}
+                                    </td>
+                                    <td>{{ data.time_of_day.capitalize() }}</td>
+                                    <td>{{ data.quantity_sold }}</td>
+                                    <td>{{ data.quantity_wasted }}</td>
+                                    <td>
+                                        {% set ratio = (data.quantity_wasted / (data.quantity_sold + 0.001)) * 100 %}
+                                        <span class="{% if ratio > 30 %}text-danger{% elif ratio > 10 %}text-warning{% else %}text-success{% endif %}">
+                                            {{ ratio|round(1) }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if data.notes %}
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                    data-bs-toggle="tooltip" data-bs-placement="left" 
+                                                    title="{{ data.notes }}">
+                                                <i data-feather="file-text" class="feather-sm"></i>
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No historical data available for this dish</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ dish.name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone and will delete all associated sales data.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('delete_dish', dish_id=dish.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete Dish</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

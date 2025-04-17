@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Restaurant Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+        <div>
+            <span id="reportDateRange" class="btn btn-sm btn-outline-primary">
+                <i data-feather="calendar" class="feather-sm me-1"></i>
+                <span>Last 30 Days</span>
+            </span>
+        </div>
+    </div>
+
+    {% if not has_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-body text-center py-5">
+                    <div class="mb-4">
+                        <i data-feather="bar-chart-2" style="width: 64px; height: 64px; color: var(--primary);"></i>
+                    </div>
+                    <h4 class="mb-3">No Data Available Yet</h4>
+                    <p class="mb-4">Start entering daily sales and waste data to see analytics and AI-powered predictions here.</p>
+                    <a href="{{ url_for('daily_data') }}" class="btn btn-gradient-primary">
+                        <i data-feather="plus-circle" class="feather-sm me-1"></i>
+                        Add Daily Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Row with Animation -->
+    <div class="row">
+        <!-- Total Sales -->
+        <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="stat-card bg-white">
+                <div class="stat-card-icon bg-primary text-white">
+                    <i data-feather="shopping-cart"></i>
+                </div>
+                <div class="stat-card-content">
+                    <h5 class="stat-card-value">
+                        {% set total_sales = namespace(value=0) %}
+                        {% for dish in top_selling %}
+                            {% set total_sales.value = total_sales.value + dish.total_sold %}
+                        {% endfor %}
+                        {{ total_sales.value }}
+                    </h5>
+                    <p class="stat-card-label">Total Items Sold</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Waste -->
+        <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="stat-card bg-white">
+                <div class="stat-card-icon bg-danger text-white">
+                    <i data-feather="trash-2"></i>
+                </div>
+                <div class="stat-card-content">
+                    <h5 class="stat-card-value">
+                        {% set total_waste = namespace(value=0) %}
+                        {% for dish in top_wasted %}
+                            {% set total_waste.value = total_waste.value + dish.total_wasted %}
+                        {% endfor %}
+                        {{ total_waste.value }}
+                    </h5>
+                    <p class="stat-card-label">Total Items Wasted</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Dishes -->
+        <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="stat-card bg-white">
+                <div class="stat-card-icon bg-info text-white">
+                    <i data-feather="coffee"></i>
+                </div>
+                <div class="stat-card-content">
+                    <h5 class="stat-card-value">{{ dishes|length }}</h5>
+                    <p class="stat-card-label">Total Dishes</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Waste Percentage -->
+        <div class="col-xl-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+            <div class="stat-card bg-white">
+                <div class="stat-card-icon bg-warning text-white">
+                    <i data-feather="percent"></i>
+                </div>
+                <div class="stat-card-content">
+                    <h5 class="stat-card-value">
+                        {% if total_sales.value > 0 %}
+                            {{ ((total_waste.value / total_sales.value) * 100)|round(1) }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </h5>
+                    <p class="stat-card-label">Waste Percentage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mt-4">
+        <!-- Daily Trend Chart -->
+        <div class="col-xl-8 col-lg-7" data-aos="fade-up" data-aos-delay="100">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">Daily Sales Trend</h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="chart-container">
+                        <canvas id="dailyTrendChart" data-chart-data='{{ daily_trend|tojson }}'></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sales by Category Chart -->
+        <div class="col-xl-4 col-lg-5" data-aos="fade-up" data-aos-delay="200">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">Sales by Category</h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="chart-container">
+                        <canvas id="salesByCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- More Charts Row -->
+    <div class="row mt-4">
+        <!-- Sales by Day of Week Chart -->
+        <div class="col-xl-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">Sales by Day of Week</h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="chart-container">
+                        <canvas id="salesByDayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Selling Dishes Chart -->
+        <div class="col-xl-6" data-aos="fade-up" data-aos-delay="200">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">Top Selling Dishes</h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Dish</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dish in top_selling %}
+                                <tr>
+                                    <td>{{ dish.name }}</td>
+                                    <td>{{ dish.total_sold }}</td>
+                                    <td>
+                                        <a href="{{ url_for('dish_details', dish_id=dish.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i data-feather="eye" class="feather-sm"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No sales data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Optimization Row -->
+    <div class="row mt-4">
+        <div class="col-12" data-aos="fade-up" data-aos-delay="100">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i data-feather="zap" class="feather-sm me-1"></i>
+                        ML-Powered Menu Optimization Suggestions
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="row">
+                        {% for suggestion in suggestions %}
+                        <div class="col-lg-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ suggestion.dish_name }}</h5>
+                                    <div class="mb-2">
+                                        <span class="badge bg-primary">Avg. Sales: {{ suggestion.avg_sales|round(1) }}</span>
+                                        <span class="badge bg-danger">Avg. Waste: {{ suggestion.avg_waste|round(1) }}</span>
+                                    </div>
+                                    <p><strong>Best Selling:</strong> {% if suggestion.best_sales_day %}{{ suggestion.best_sales_day }} ({{ suggestion.best_sales_time }}){% else %}Not enough data{% endif %}</p>
+                                    <p><strong>Recommendation:</strong> {{ suggestion.recommendation }}</p>
+                                    <a href="{{ url_for('dish_details', dish_id=suggestion.dish_id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                No suggestions available yet. Add more daily sales data to generate insights.
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waste Management Row -->
+    <div class="row mt-4">
+        <div class="col-12" data-aos="fade-up" data-aos-delay="100">
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <h5 class="dashboard-card-title">
+                        <i data-feather="trash" class="feather-sm me-1"></i>
+                        Waste Management
+                    </h5>
+                </div>
+                <div class="dashboard-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Dish</th>
+                                    <th>Quantity Wasted</th>
+                                    <th>Waste Ratio</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dish in top_wasted %}
+                                <tr data-aos="fade-left" data-aos-delay="{{ loop.index * 50 }}">
+                                    <td>{{ dish.name }}</td>
+                                    <td>{{ dish.total_wasted }}</td>
+                                    <td>
+                                        {% set waste_ratio = 0 %}
+                                        {% for top_dish in top_selling if top_dish.id == dish.id %}
+                                            {% set waste_ratio = (dish.total_wasted / (top_dish.total_sold + 0.0001)) * 100 %}
+                                        {% endfor %}
+                                        
+                                        {% if waste_ratio > 30 %}
+                                        <div class="badge bg-danger">High ({{ waste_ratio|round(1) }}%)</div>
+                                        {% elif waste_ratio > 10 %}
+                                        <div class="badge bg-warning">Medium ({{ waste_ratio|round(1) }}%)</div>
+                                        {% else %}
+                                        <div class="badge bg-success">Low ({{ waste_ratio|round(1) }}%)</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('dish_details', dish_id=dish.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i data-feather="eye" class="feather-sm"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No waste data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts
+        if (document.getElementById('dailyTrendChart')) {
+            renderDailyTrendChart({{ daily_trend|tojson }});
+        }
+    });
+</script>
+{% endblock %}

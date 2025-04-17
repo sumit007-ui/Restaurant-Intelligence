@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Dish Management - Restaurant Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dish Management</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDishModal">
+            <i data-feather="plus" class="feather-sm me-1"></i> Add New Dish
+        </button>
+    </div>
+    
+    <!-- Dish Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="dashboard-card-body">
+                    <ul class="nav nav-pills" id="dishCategoryTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="pill" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">
+                                All Dishes
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="appetizer-tab" data-bs-toggle="pill" data-bs-target="#appetizer" type="button" role="tab" aria-controls="appetizer" aria-selected="false">
+                                Appetizers
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="main-tab" data-bs-toggle="pill" data-bs-target="#main" type="button" role="tab" aria-controls="main" aria-selected="false">
+                                Main Courses
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="dessert-tab" data-bs-toggle="pill" data-bs-target="#dessert" type="button" role="tab" aria-controls="dessert" aria-selected="false">
+                                Desserts
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="beverage-tab" data-bs-toggle="pill" data-bs-target="#beverage" type="button" role="tab" aria-controls="beverage" aria-selected="false">
+                                Beverages
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="side-tab" data-bs-toggle="pill" data-bs-target="#side" type="button" role="tab" aria-controls="side" aria-selected="false">
+                                Side Dishes
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dish List -->
+    <div class="tab-content" id="dishCategoryTabContent">
+        <div class="tab-pane fade show active" id="all" role="tabpanel" aria-labelledby="all-tab">
+            <div class="dish-grid">
+                {% for dish in dishes %}
+                <div class="dish-card">
+                    <div class="dish-card-badge">{{ dish.category.capitalize() }}</div>
+                    <div class="dish-card-image">
+                        <img src="{{ dish.image_url }}" alt="{{ dish.name }}">
+                        <div class="dish-card-overlay"></div>
+                    </div>
+                    <div class="dish-card-content">
+                        <h3 class="dish-card-title">{{ dish.name }}</h3>
+                        <span class="dish-card-category">{{ dish.category }}</span>
+                        <p class="dish-card-description">
+                            {{ dish.description|truncate(80) if dish.description else 'No description available.' }}
+                        </p>
+                        <div class="dish-card-actions">
+                            <span class="dish-card-price">${{ "%.2f"|format(dish.price) }}</span>
+                            <a href="{{ url_for('dish_details', dish_id=dish.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i data-feather="eye" class="feather-sm me-1"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">No dishes found!</h4>
+                        <p>You haven't added any dishes to your menu yet. Click the "Add New Dish" button to get started.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Category-specific tabs -->
+        {% for category in ['appetizer', 'main', 'dessert', 'beverage', 'side'] %}
+        <div class="tab-pane fade" id="{{ category }}" role="tabpanel" aria-labelledby="{{ category }}-tab">
+            <div class="dish-grid">
+                {% set found = {'value': false} %}
+                {% for dish in dishes if dish.category == category %}
+                {% set _ = found.update({'value': true}) %}
+                <div class="dish-card">
+                    <div class="dish-card-badge">{{ dish.category.capitalize() }}</div>
+                    <div class="dish-card-image">
+                        <img src="{{ dish.image_url }}" alt="{{ dish.name }}">
+                        <div class="dish-card-overlay"></div>
+                    </div>
+                    <div class="dish-card-content">
+                        <h3 class="dish-card-title">{{ dish.name }}</h3>
+                        <span class="dish-card-category">{{ dish.category }}</span>
+                        <p class="dish-card-description">
+                            {{ dish.description|truncate(80) if dish.description else 'No description available.' }}
+                        </p>
+                        <div class="dish-card-actions">
+                            <span class="dish-card-price">${{ "%.2f"|format(dish.price) }}</span>
+                            <a href="{{ url_for('dish_details', dish_id=dish.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i data-feather="eye" class="feather-sm me-1"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not found.value %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">No {{ category.capitalize() }}s found!</h4>
+                        <p>You haven't added any {{ category }}s to your menu yet. Click the "Add New Dish" button to add some.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add Dish Modal -->
+<div class="modal fade" id="addDishModal" tabindex="-1" aria-labelledby="addDishModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDishModalLabel">Add New Dish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="needs-validation" method="POST" action="{{ url_for('dish_management') }}" enctype="multipart/form-data" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Dish Name</label>
+                            {{ form.name(class="form-control", id="name", required=true) }}
+                            <div class="invalid-feedback">
+                                Please enter a dish name.
+                            </div>
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="category" class="form-label">Category</label>
+                            {{ form.category(class="form-select", id="category", required=true) }}
+                            <div class="invalid-feedback">
+                                Please select a category.
+                            </div>
+                            {% if form.category.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.category.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        {{ form.description(class="form-control", id="description", rows=3) }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="price" class="form-label">Price ($)</label>
+                            {{ form.price(class="form-control", id="price", required=true, type="number", step="0.01", min="0") }}
+                            <div class="invalid-feedback">
+                                Please enter a valid price.
+                            </div>
+                            {% if form.price.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.price.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="image" class="form-label">Dish Image</label>
+                            {{ form.image(class="form-control", id="image") }}
+                            <div class="form-text">
+                                Optional. Max file size: 5MB
+                            </div>
+                            {% if form.image.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.image.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-center">
+                            <img id="image-preview" class="img-fluid rounded mt-2" style="max-height: 200px; display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
