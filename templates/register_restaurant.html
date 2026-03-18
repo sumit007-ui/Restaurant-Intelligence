@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block auth_content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="col-md-6">
+        <div class="card shadow-lg border-0 rounded-3">
+            <div class="card-header bg-dark text-white text-center py-4">
+                <h2 class="mb-0 fw-bold">Register Your Restaurant</h2>
+                <p class="mb-0 text-muted opacity-75">Join our professional management platform</p>
+            </div>
+            <div class="card-body p-5">
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+                    
+                    <h5 class="text-uppercase text-muted border-bottom pb-2 mb-4">Restaurant Details</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.restaurant_name.label.text }}</label>
+                        {{ form.restaurant_name(class="form-control form-control-lg" + (" is-invalid" if form.restaurant_name.errors else ""), placeholder="Enter restaurant name") }}
+                        {% for error in form.restaurant_name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label fw-bold">{{ form.address.label.text }}</label>
+                            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), placeholder="Address") }}
+                            {% for error in form.address.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">{{ form.phone.label.text }}</label>
+                            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="Phone number") }}
+                            {% for error in form.phone.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-uppercase text-muted border-bottom pb-2 mb-4 mt-5">Admin Credentials</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.admin_username.label.text }}</label>
+                        {{ form.admin_username(class="form-control" + (" is-invalid" if form.admin_username.errors else ""), placeholder="Pick a username") }}
+                        {% for error in form.admin_username.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ form.admin_email.label.text }}</label>
+                        {{ form.admin_email(class="form-control" + (" is-invalid" if form.admin_email.errors else ""), placeholder="admin@example.com") }}
+                        {% for error in form.admin_email.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label fw-bold">{{ form.admin_password.label.text }}</label>
+                            {{ form.admin_password(class="form-control" + (" is-invalid" if form.admin_password.errors else ""), placeholder="Password") }}
+                            {% for error in form.admin_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">{{ form.confirm_password.label.text }}</label>
+                            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Confirm") }}
+                            {% for error in form.confirm_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-5">
+                        {{ form.submit(class="btn btn-primary btn-lg fw-bold py-3 shadow-sm") }}
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="text-primary fw-bold text-decoration-none">Login Here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="text-center mt-3 text-muted">
+            <small>&copy; {{ now.year }} Restaurant Intelligence SaaS</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1c2c 0%, #421940 100%);
+    }
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+    .form-control:focus {
+        border-color: #6a11cb;
+        box-shadow: 0 0 0 0.25rem rgba(106, 17, 203, 0.25);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Staff Management – Restaurant Intelligence{% endblock %}
+{% block page_title %}Staff Management{% endblock %}
+{% block page_subtitle %}Manage your restaurant's team members and roles{% endblock %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/staff.css') }}">
+{% endblock %}
+
+{% block content %}
+<div data-aos="fade-up">
+
+  <!-- ── Mini Stats ── -->
+  <div class="staff-stats-row">
+    <div class="staff-stat-mini">
+      <div class="count">{{ staff_list|length }}</div>
+      <div class="label">Total Staff</div>
+    </div>
+    <div class="staff-stat-mini">
+      <div class="count" style="color: var(--brand-green);">{{ staff_list|selectattr('is_active')|list|length }}</div>
+      <div class="label">Active</div>
+    </div>
+    <div class="staff-stat-mini">
+      <div class="count" style="color: var(--text-muted);">{{ staff_list|rejectattr('is_active')|list|length }}</div>
+      <div class="label">Inactive</div>
+    </div>
+  </div>
+
+  <div class="staff-layout">
+    <!-- ── Add Staff Form ── -->
+    <div class="form-panel ri-card" style="position: sticky; top: calc(var(--header-height) + 20px);">
+      <div class="ri-card-header" style="background: rgba(99,102,241,0.06);">
+        <div class="ri-card-title">
+          <i data-feather="user-plus" style="width:16px;height:16px;color:var(--brand-accent);"></i>
+          Add Staff Member
+        </div>
+      </div>
+      <div class="ri-card-body">
+        <form method="POST" action="{{ url_for('staff_management') }}" id="add-staff-form">
+          {{ form.hidden_tag() }}
+
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.full_name.label.text }}</label>
+            {{ form.full_name(class="ri-form-control", placeholder="Full name") }}
+          </div>
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.username.label.text }}</label>
+            {{ form.username(class="ri-form-control", placeholder="Username") }}
+          </div>
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.email.label.text }}</label>
+            {{ form.email(class="ri-form-control", placeholder="Email address") }}
+          </div>
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.password.label.text }}</label>
+            {{ form.password(class="ri-form-control", placeholder="Initial password") }}
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;" class="form-group">
+            <div>
+              <label class="ri-form-label">{{ form.role.label.text }}</label>
+              {{ form.role(class="ri-form-control") }}
+            </div>
+            <div>
+              <label class="ri-form-label">{{ form.salary.label.text }}</label>
+              {{ form.salary(class="ri-form-control", placeholder="0.00") }}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.phone.label.text }}</label>
+            {{ form.phone(class="ri-form-control", placeholder="Phone number") }}
+          </div>
+          <button type="submit" class="btn-ri btn-ri-primary" style="width:100%; justify-content:center; margin-top:4px;">
+            <i data-feather="user-plus" style="width:15px;height:15px;"></i>
+            Add Staff Member
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Staff Directory ── -->
+    <div class="ri-card">
+      <div class="ri-card-header">
+        <div class="ri-card-title">
+          <i data-feather="users" style="width:16px;height:16px;color:var(--brand-accent);"></i>
+          Staff Directory
+        </div>
+        <div class="badge-ri badge-indigo">{{ staff_list|length }} Members</div>
+      </div>
+
+      {% if staff_list %}
+      <div style="overflow-x:auto;">
+        <table class="ri-table">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Monthly Salary</th>
+              <th>Joined</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff in staff_list %}
+            <tr>
+              <td>
+                <div class="staff-user-cell">
+                  <div class="staff-avatar" style="background: linear-gradient(135deg,
+                    {% if staff.role == 'manager' %}#6366f1, #a78bfa
+                    {% elif staff.role == 'chef' %}#f59e0b, #d97706
+                    {% else %}#06b6d4, #0891b2{% endif %});">
+                    {{ staff.username[0].upper() }}
+                  </div>
+                  <div>
+                    <div class="staff-name">{{ staff.staff_profile.full_name if staff.staff_profile and staff.staff_profile.full_name else staff.username }}</div>
+                    <div class="staff-email">{{ staff.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge-ri {% if staff.role == 'manager' %}badge-indigo{% elif staff.role == 'chef' %}badge-chef{% else %}badge-staff{% endif %}">
+                  {{ staff.role }}
+                </span>
+              </td>
+              <td>
+                <span class="badge-ri {% if staff.is_active %}badge-green{% else %}badge-gray{% endif %}">
+                  {% if staff.is_active %}● Active{% else %}○ Inactive{% endif %}
+                </span>
+              </td>
+              <td class="salary-cell">
+                ₹{{ "%.2f"|format(staff.staff_profile.salary if staff.staff_profile and staff.staff_profile.salary else 0.0) }}
+              </td>
+              <td style="color: var(--text-muted); font-size:12px;">
+                {{ staff.created_at.strftime('%b %d, %Y') }}
+              </td>
+              <td>
+                <div class="action-group">
+                  <form action="{{ url_for('toggle_staff_status', user_id=staff.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="icon-action {% if staff.is_active %}deactivate{% else %}activate{% endif %}"
+                            title="{{ 'Deactivate' if staff.is_active else 'Activate' }}">
+                      <i data-feather="{{ 'user-x' if staff.is_active else 'user-check' }}" style="width:13px;height:13px;"></i>
+                    </button>
+                  </form>
+                  <form action="{{ url_for('delete_staff', user_id=staff.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="icon-action delete" title="Delete"
+                            data-confirm="Permanently delete {{ staff.username }}? This cannot be undone.">
+                      <i data-feather="trash-2" style="width:13px;height:13px;"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">👥</div>
+        <div class="empty-state-title">No staff members yet</div>
+        <div class="empty-state-desc">Add your first team member using the form on the left.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

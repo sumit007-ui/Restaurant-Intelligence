@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}POS / Billing – Restaurant Intelligence{% endblock %}
+{% block page_title %}POS Billing{% endblock %}
+{% block page_subtitle %}Point of Sale Terminal{% endblock %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pos.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="pos-layout" data-aos="fade-up">
+
+  <!-- ══ LEFT: Menu Panel ══ -->
+  <div class="menu-panel">
+    <div class="menu-panel-header">
+      <div class="menu-search">
+        <i data-feather="search" style="width:15px;height:15px;"></i>
+        <input type="text" id="pos-search" placeholder="Search menu..." oninput="searchMenu(this.value)">
+      </div>
+      <div class="table-input">
+        <i data-feather="layout" style="width:13px;height:13px;"></i>
+        Table #
+        <input type="number" id="table-num" placeholder="–" min="1">
+      </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="category-filters" id="cat-filters">
+      <button class="cat-btn active" onclick="filterMenu('all', this)">All</button>
+      {% set cats = dishes|map(attribute='category')|unique|list %}
+      {% for cat in cats %}
+      <button class="cat-btn" onclick="filterMenu('{{ cat.lower() }}', this)">{{ cat|capitalize }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- Dishes Grid -->
+    <div class="menu-grid-wrapper">
+      <div class="menu-grid" id="pos-menu-items">
+        {% for dish in dishes %}
+        <div class="dish-card pos-item-card" data-category="{{ dish.category.lower() }}" data-name="{{ dish.name.lower() }}">
+          <div class="dish-card-img">
+            <img src="{{ dish.image_url or 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop' }}"
+                 alt="{{ dish.name }}"
+                 onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop'">
+          </div>
+          <div class="dish-card-body">
+            <div class="dish-card-name">{{ dish.name }}</div>
+            <div class="dish-card-desc">{{ dish.description[:60] if dish.description else dish.category }}</div>
+            <div class="dish-card-footer">
+              <div class="dish-card-price">₹{{ "%.0f"|format(dish.price) }}</div>
+              <button class="dish-add-btn"
+                      onclick="addToOrder('{{ dish.id }}', {{ dish.name|tojson }}, {{ dish.price }})"
+                      title="Add to order">+</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: Order Panel ══ -->
+  <div class="order-panel">
+    <div class="order-panel-header">
+      <div class="order-panel-title">
+        Current Order
+        <span class="order-count-badge" id="order-count">0 items</span>
+      </div>
+    </div>
+
+    <div class="order-items-list" id="order-items-list">
+      <div class="pos-empty" id="empty-order">
+        <i data-feather="shopping-cart" style="width:44px;height:44px;"></i>
+        <p>Order list is empty.<br>Select dishes from the menu.</p>
+      </div>
+    </div>
+
+    <div class="order-summary">
+      <div class="summary-row">
+        <span class="label">Subtotal</span>
+        <span class="value" id="order-subtotal">₹0.00</span>
+      </div>
+      <div class="summary-row">
+        <span class="label">GST (5%)</span>
+        <span class="value" id="order-tax">₹0.00</span>
+      </div>
+      <div class="summary-total">
+        <span class="label">TOTAL</span>
+        <span class="amount" id="order-total">₹0.00</span>
+      </div>
+
+      <button class="finalize-btn" id="finalize-btn" onclick="finalizeOrder()">
+        <i data-feather="check-circle" style="width:16px;height:16px;"></i>
+        Finalize & Bill
+      </button>
+      <button class="clear-btn" onclick="clearOrder()">Clear All</button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+let currentOrder = [];
+
+function addToOrder(id, name, price) {
+  const existing = currentOrder.find(i => i.id == id);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    currentOrder.push({ id, name, price: parseFloat(price), quantity: 1 });
+  }
+  updateOrderUI();
+}
+
+function removeFromOrder(id) {
+  const idx = currentOrder.findIndex(i => i.id == id);
+  if (idx > -1) {
+    if (currentOrder[idx].quantity > 1) currentOrder[idx].quantity--;
+    else currentOrder.splice(idx, 1);
+  }
+  updateOrderUI();
+}
+
+function updateOrderUI() {
+  const list  = document.getElementById('order-items-list');
+  const empty = document.getElementById('empty-order');
+  const count = document.getElementById('order-count');
+
+  const totalItems = currentOrder.reduce((s, i) => s + i.quantity, 0);
+  count.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
+
+  // Remove old renders
+  list.querySelectorAll('.order-item').forEach(e => e.remove());
+
+  if (currentOrder.length === 0) {
+    empty.style.display = 'block';
+    document.getElementById('order-subtotal').textContent = '₹0.00';
+    document.getElementById('order-tax').textContent      = '₹0.00';
+    document.getElementById('order-total').textContent    = '₹0.00';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  let subtotal = 0;
+  currentOrder.forEach(item => {
+    const itemTotal = item.price * item.quantity;
+    subtotal += itemTotal;
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.innerHTML = `
+      <div style="flex:1;">
+        <div class="order-item-name">${item.name}</div>
+        <div class="order-item-price">₹${item.price.toFixed(2)} × ${item.quantity}</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="removeFromOrder('${item.id}')">−</button>
+        <span class="qty-value">${item.quantity}</span>
+        <button class="qty-btn" onclick="addToOrder('${item.id}', ${JSON.stringify(item.name)}, ${item.price})">+</button>
+      </div>
+      <div class="order-item-total">₹${itemTotal.toFixed(2)}</div>
+    `;
+    list.appendChild(div);
+  });
+
+  const tax   = subtotal * 0.05;
+  const total = subtotal + tax;
+  document.getElementById('order-subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+  document.getElementById('order-tax').textContent      = `₹${tax.toFixed(2)}`;
+  document.getElementById('order-total').textContent    = `₹${total.toFixed(2)}`;
+}
+
+function clearOrder() {
+  currentOrder = [];
+  updateOrderUI();
+}
+
+function finalizeOrder() {
+  if (currentOrder.length === 0) {
+    window.showToast && window.showToast('No items in the order!', 'warning');
+    return;
+  }
+  const tableNum = document.getElementById('table-num').value || null;
+  const btn = document.getElementById('finalize-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i data-feather="loader" style="width:16px;height:16px;"></i> Processing...';
+  feather.replace();
+
+  fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items: currentOrder.map(i => ({ dish_id: i.id, quantity: i.quantity })),
+      table_number: tableNum
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.order_id) {
+      window.showToast && window.showToast(`Order #${data.order_id} placed successfully!`, 'success');
+      clearOrder();
+    } else {
+      window.showToast && window.showToast(data.error || 'Order failed', 'danger');
+    }
+  })
+  .catch(() => window.showToast && window.showToast('Network error. Please try again.', 'danger'))
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-feather="check-circle" style="width:16px;height:16px;"></i> Finalize & Bill';
+    feather.replace();
+  });
+}
+
+function filterMenu(cat, btn) {
+  document.querySelectorAll('#cat-filters .cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  document.querySelectorAll('.pos-item-card').forEach(card => {
+    const matches = cat === 'all' || card.dataset.category === cat;
+    card.style.display = matches ? '' : 'none';
+  });
+}
+
+function searchMenu(q) {
+  const query = q.toLowerCase();
+  document.querySelectorAll('.pos-item-card').forEach(card => {
+    card.style.display = card.dataset.name.includes(query) ? '' : 'none';
+  });
+  // Reset active filter
+  if (!q) {
+    document.querySelectorAll('#cat-filters .cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('#cat-filters .cat-btn').classList.add('active');
+  }
+}
+</script>
+{% endblock %}

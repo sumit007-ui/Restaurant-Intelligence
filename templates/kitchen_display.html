@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Kitchen Display – Restaurant Intelligence{% endblock %}
+{% block page_title %}Kitchen Ticket Board{% endblock %}
+{% block page_subtitle %}Live order tickets for kitchen staff{% endblock %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/kitchen.css') }}">
+{% endblock %}
+
+{% block header_actions %}
+<div class="live-indicator">
+  <div class="live-dot"></div>
+  Live Updates
+</div>
+<button class="btn-ri btn-ri-ghost btn-ri-sm" onclick="location.reload()">
+  <i data-feather="refresh-cw" style="width:13px;height:13px;"></i>
+  Refresh
+</button>
+{% endblock %}
+
+{% block content %}
+<div data-aos="fade-up">
+  <div class="kitchen-grid" id="kitchen-ticket-grid">
+    {% for order in orders %}
+    <div class="ticket-card" id="order-{{ order.id }}">
+      <div class="ticket-header {{ order.status }}">
+        <div>
+          <div class="ticket-order-num">#{{ order.id }}</div>
+          <div class="ticket-table">
+            <i data-feather="layout" style="width:11px;height:11px;"></i>
+            Table {{ order.table_number or 'N/A' }}
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="status-pill {{ order.status }}">{{ order.status }}</div>
+          <div class="ticket-time" style="margin-top:6px;">
+            <i data-feather="clock" style="width:12px;height:12px;"></i>
+            {{ order.created_at.strftime('%H:%M') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="ticket-items">
+        {% for item in order.items %}
+        <div class="ticket-item">
+          <div class="item-qty">{{ item.quantity }}</div>
+          <div class="item-name">{{ item.dish.name }}</div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="ticket-actions">
+        {% if order.status == 'pending' %}
+        <button class="start-btn pending-btn" data-order-id="{{ order.id }}" data-next-status="preparing" onclick="handleStatus(this)">
+          <i data-feather="play" style="width:14px;height:14px;"></i>
+          Start Cooking
+        </button>
+        {% elif order.status == 'preparing' %}
+        <button class="start-btn preparing-btn" data-order-id="{{ order.id }}" data-next-status="ready" onclick="handleStatus(this)">
+          <i data-feather="check" style="width:14px;height:14px;"></i>
+          Mark as Ready
+        </button>
+        {% elif order.status == 'ready' %}
+        <button class="start-btn ready-btn" data-order-id="{{ order.id }}" data-next-status="completed" onclick="handleStatus(this)">
+          <i data-feather="flag" style="width:14px;height:14px;"></i>
+          Mark Picked Up
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% else %}
+    <div class="col-span-all" style="grid-column: 1/-1;">
+      <div class="empty-state" style="padding: 80px 20px;">
+        <div class="empty-state-icon">🍳</div>
+        <div class="empty-state-title">No active orders in the kitchen</div>
+        <div class="empty-state-desc">New orders placed from the POS terminal will appear here automatically.</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+function handleStatus(element) {
+  const id = element.dataset.orderId;
+  const status = element.dataset.nextStatus;
+  element.disabled = true;
+  element.innerHTML = '<i data-feather="loader" style="width:14px;height:14px;"></i> Updating...';
+  feather.replace();
+  updateStatus(id, status);
+}
+
+function updateStatus(orderId, newStatus) {
+  fetch(`/api/orders/${orderId}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: newStatus })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.message) {
+      if (newStatus === 'completed') {
+        const card = document.getElementById(`order-${orderId}`);
+        if (card) {
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.9)';
+          card.style.transition = 'all 0.4s ease';
+          setTimeout(() => location.reload(), 400);
+        }
+      } else {
+        location.reload();
+      }
+    }
+  })
+  .catch(() => {
+    window.showToast && window.showToast('Error updating order status', 'danger');
+    location.reload();
+  });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => location.reload(), 30000);
+</script>
+{% endblock %}

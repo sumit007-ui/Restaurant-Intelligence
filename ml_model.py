@@ -10,18 +10,24 @@ from sklearn.metrics import accuracy_score, classification_report
 from models import DailyData, Dish
 
 class DishPredictor:
-    def __init__(self):
+    def __init__(self, restaurant_id=None):
+        self.restaurant_id = restaurant_id
         self.sales_model = None
         self.waste_model = None
         self.sales_scaler = StandardScaler()
         self.waste_scaler = StandardScaler()
         self.label_encoders = {}
-        self.model_path = 'model.pkl'
+        # Store separate models for each restaurant
+        self.model_path = f'model_r{restaurant_id}.pkl' if restaurant_id else 'model_global.pkl'
         
     def _prepare_data(self):
         """Prepare data from database for training"""
-        # Get all daily data records
-        daily_data = DailyData.query.all()
+        if not self.restaurant_id:
+            return None
+            
+        # Get all daily data records for this restaurant
+        from models import db
+        daily_data = db.session.query(DailyData).join(Dish).filter(Dish.restaurant_id == self.restaurant_id).all()
         
         if not daily_data or len(daily_data) < 5:  # Need at least 5 records for meaningful predictions
             return None
@@ -29,8 +35,9 @@ class DishPredictor:
         # Convert to DataFrame
         data = []
         for record in daily_data:
-            dish = Dish.query.get(record.dish_id)
-            data.append({
+            dish = db.session.query(Dish).get(record.dish_id)
+            if dish and dish.restaurant_id == self.restaurant_id:
+                data.append({
                 'dish_id': record.dish_id,
                 'dish_name': dish.name,
                 'dish_category': dish.category,
@@ -179,7 +186,7 @@ class DishPredictor:
                         return self._get_fallback_prediction(dish_id, day_of_week, time_of_day)
             
             dish = Dish.query.get(dish_id)
-            if not dish:
+            if not dish or dish.restaurant_id != self.restaurant_id:
                 return None
             
             # Make sure we have label encoders for these categories
@@ -294,7 +301,7 @@ class DishPredictor:
     
     def get_menu_optimization_suggestions(self):
         """Generate menu optimization suggestions based on historical data"""
-        dishes = Dish.query.all()
+        dishes = Dish.query.filter_by(restaurant_id=self.restaurant_id).all()
         suggestions = []
         
         days_of_week = list(range(7))  # 0-6 for Monday-Sunday

@@ -1,0 +1,206 @@
+/* ============================================================
+   DASHBOARD PAGE CSS — Restaurant Intelligence
+   ============================================================ */
+
+/* ── Stat Cards Grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+/* ══ 3D Glassmorphism Stat Card ══ */
+.stat-card-3d {
+  position: relative;
+  border-radius: 20px;
+  padding: 26px 24px 48px;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.32s ease;
+  will-change: transform;
+}
+.stat-card-3d:hover { transform: translateY(-8px) scale(1.02); }
+
+/* ── Colour Variants ── */
+.stat-card-3d.green {
+  background: linear-gradient(145deg, #11b87f 0%, #059669 45%, #047857 100%);
+  box-shadow: 0 2px 0 rgba(255,255,255,0.22) inset, 0 18px 42px rgba(5,150,105,0.55), 0 4px 12px rgba(0,0,0,0.4);
+}
+.stat-card-3d.green:hover {
+  box-shadow: 0 2px 0 rgba(255,255,255,0.3) inset, 0 30px 64px rgba(5,150,105,0.72), 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.stat-card-3d.indigo {
+  background: linear-gradient(145deg, #7577f5 0%, #4f46e5 45%, #3730a3 100%);
+  box-shadow: 0 2px 0 rgba(255,255,255,0.18) inset, 0 18px 42px rgba(79,70,229,0.55), 0 4px 12px rgba(0,0,0,0.4);
+}
+.stat-card-3d.indigo:hover {
+  box-shadow: 0 2px 0 rgba(255,255,255,0.26) inset, 0 30px 64px rgba(79,70,229,0.72), 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.stat-card-3d.amber {
+  background: linear-gradient(145deg, #fbbf24 0%, #d97706 45%, #92400e 100%);
+  box-shadow: 0 2px 0 rgba(255,255,255,0.22) inset, 0 18px 42px rgba(217,119,6,0.55), 0 4px 12px rgba(0,0,0,0.4);
+}
+.stat-card-3d.amber:hover {
+  box-shadow: 0 2px 0 rgba(255,255,255,0.3) inset, 0 30px 64px rgba(217,119,6,0.72), 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.stat-card-3d.red {
+  background: linear-gradient(145deg, #f87171 0%, #e11d48 45%, #9f1239 100%);
+  box-shadow: 0 2px 0 rgba(255,255,255,0.18) inset, 0 18px 42px rgba(225,29,72,0.55), 0 4px 12px rgba(0,0,0,0.4);
+}
+.stat-card-3d.red:hover {
+  box-shadow: 0 2px 0 rgba(255,255,255,0.26) inset, 0 30px 64px rgba(225,29,72,0.72), 0 8px 20px rgba(0,0,0,0.5);
+}
+
+/* ── Shimmer sweep on hover ── */
+.stat-card-3d::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -65%;
+  width: 45%; height: 100%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0.55s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.stat-card-3d:hover::before { left: 120%; }
+
+/* ── Background decorative circle ── */
+.stat-card-3d::after {
+  content: '';
+  position: absolute;
+  bottom: -36px; right: -24px;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  pointer-events: none;
+}
+
+/* ── Inner content ── */
+.stat-card-3d-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+/* ── Frosted icon box ── */
+.stat-card-icon-3d {
+  width: 54px; height: 54px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.32);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22), 0 1px 0 rgba(255,255,255,0.3) inset;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+.stat-card-3d:hover .stat-card-icon-3d {
+  transform: scale(1.1) rotate(-5deg);
+  background: rgba(255,255,255,0.3);
+}
+.stat-card-icon-3d svg, .stat-card-icon-3d i {
+  width: 24px; height: 24px; color: #fff; font-size: 20px;
+}
+
+.stat-card-text { flex: 1; }
+
+.stat-card-value-3d {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px; font-weight: 800;
+  color: #fff; line-height: 1.1; letter-spacing: -0.5px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+
+.stat-card-label-3d {
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,0.72);
+  text-transform: uppercase; letter-spacing: 0.9px; margin-top: 5px;
+}
+
+/* ── Bottom label badge ── */
+.stat-card-badge {
+  position: absolute;
+  bottom: 16px; right: 18px;
+  font-size: 10.5px; font-weight: 700;
+  color: rgba(255,255,255,0.58);
+  background: rgba(255,255,255,0.1);
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.14);
+  z-index: 2;
+}
+
+/* ══ Charts Grid ══ */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* ── Chart container ── */
+.chart-wrapper { position: relative; height: 260px; }
+.chart-wrapper canvas { width: 100% !important; }
+
+/* ══ Top Dishes Ranking ══ */
+.dish-rank-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.dish-rank-item:last-child { border-bottom: none; }
+
+.dish-rank-number {
+  width: 30px; height: 30px; border-radius: 9px;
+  background: var(--brand-primary-light); color: var(--brand-accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.dish-rank-name { font-weight: 600; color: var(--text-primary); font-size: 13.5px; }
+.dish-rank-qty  { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.dish-rank-rev  { margin-left: auto; font-weight: 700; font-size: 14px; color: #34d399; font-family: monospace; }
+
+/* ══ Header buttons ══ */
+.report-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 10px;
+  background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3);
+  color: var(--brand-accent); font-size: 12.5px; font-weight: 600;
+  transition: all var(--transition); cursor: pointer; text-decoration: none;
+}
+.report-btn:hover {
+  background: rgba(99,102,241,0.25); border-color: var(--brand-primary);
+  color: white; text-decoration: none; transform: translateY(-1px);
+}
+
+.date-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px; background: var(--bg-elevated);
+  border: 1px solid var(--border-color); border-radius: 10px;
+  font-size: 12px; color: var(--text-secondary); font-weight: 500;
+}
+
+/* ══ Empty / No-data State ══ */
+.no-data-card {
+  background: var(--bg-elevated); border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius); padding: 60px 24px;
+  text-align: center; margin-bottom: 28px;
+}
+.no-data-icon  { font-size: 52px; color: var(--brand-primary); opacity: 0.35; margin-bottom: 18px; display: block; }
+.no-data-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+.no-data-desc  { font-size: 13px; color: var(--text-secondary); margin-bottom: 22px; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+/* ══ Responsive ══ */
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 576px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card-value-3d { font-size: 22px; }
+}

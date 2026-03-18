@@ -1,0 +1,234 @@
+/* ============================================================
+   MENU MANAGEMENT PAGE CSS
+   Restaurant Intelligence
+   ============================================================ */
+
+.menu-mgmt-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* ── Add Dish Form Panel ── */
+.form-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  position: sticky;
+  top: calc(var(--header-height) + 20px);
+  overflow: hidden;
+}
+
+.form-panel-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(99,102,241,0.06);
+}
+
+.form-panel-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-panel-title i { color: var(--brand-accent); }
+
+.form-panel-body { padding: 22px; }
+
+.form-group { margin-bottom: 16px; }
+
+/* ── Image Upload ── */
+.img-upload-zone {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: rgba(255,255,255,0.02);
+}
+
+.img-upload-zone:hover { border-color: var(--brand-primary); background: rgba(99,102,241,0.04); }
+.img-upload-zone i { font-size: 28px; color: var(--text-muted); margin-bottom: 8px; display: block; }
+.img-upload-zone p { font-size: 12px; color: var(--text-muted); margin: 0; }
+.img-upload-zone input { display: none; }
+
+/* ── Toggle Switch ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.toggle-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  cursor: pointer;
+}
+
+.ri-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+}
+
+.ri-switch input { display: none; }
+
+.ri-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-base);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid var(--border-color);
+}
+
+.ri-switch-slider::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  top: 2px; left: 2px;
+  transition: all var(--transition);
+}
+
+.ri-switch input:checked + .ri-switch-slider {
+  background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+}
+
+.ri-switch input:checked + .ri-switch-slider::after {
+  transform: translateX(20px);
+  background: var(--brand-primary);
+}
+
+/* ── Dish Cards Grid ── */
+.dishes-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.dishes-panel-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dishes-count {
+  background: var(--brand-primary-light);
+  color: var(--brand-accent);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.dishes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.menu-dish-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: all var(--transition);
+}
+
+.menu-dish-card:hover { 
+  border-color: rgba(99,102,241,0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.menu-dish-img {
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.menu-dish-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-dish-body { padding: 14px; }
+
+.menu-dish-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.menu-dish-cat {
+  font-size: 11px;
+  background: rgba(99,102,241,0.12);
+  color: var(--brand-accent);
+  padding: 2px 8px;
+  border-radius: 5px;
+  display: inline-block;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+}
+
+.menu-dish-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-dish-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brand-accent);
+}
+
+.menu-dish-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-size: 12px;
+}
+
+.icon-btn.edit:hover   { background: rgba(99,102,241,0.12); border-color: var(--brand-primary); color: var(--brand-accent); }
+.icon-btn.delete:hover { background: rgba(239,68,68,0.12);  border-color: var(--brand-red); color: var(--brand-red); }
+
+@media (max-width: 992px) { .menu-mgmt-layout { grid-template-columns: 1fr; } }

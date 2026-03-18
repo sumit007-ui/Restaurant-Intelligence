@@ -40,17 +40,17 @@ def create_default_admin():
     from werkzeug.security import generate_password_hash
     from models import User
 
-    admin = User.query.filter_by(role='admin').first()
+    admin = User.query.filter_by(username='system_admin').first()
     if not admin:
         admin = User(
-            username='admin',
-            email='admin@restaurant.com',
-            password_hash=generate_password_hash('admin123'),
+            username='system_admin',
+            email='system@restaurant.com',
+            password_hash=generate_password_hash('system123'),
             role='admin'
         )
         db.session.add(admin)
         db.session.commit()
-        logging.info("Created default admin user")
+        logging.info("Created default system admin user")
 
 
 # Import models and routes here to avoid circular imports

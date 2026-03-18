@@ -1,0 +1,69 @@
+/* ============================================================
+   INVENTORY PAGE CSS
+   Restaurant Intelligence
+   ============================================================ */
+
+.inventory-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* ── Stock Level Progress ── */
+.stock-bar-wrapper { margin-top: 6px; }
+
+.stock-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stock-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+.stock-bar-fill.healthy { background: var(--brand-green); }
+.stock-bar-fill.low     { background: var(--brand-amber); }
+.stock-bar-fill.critical { background: var(--brand-red); }
+
+/* ── Inventory Table Row States ── */
+.ri-table tr.low-stock td:first-child {
+  border-left: 3px solid var(--brand-red);
+}
+
+/* ── Cost Cell ── */
+.cost-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--brand-green);
+  font-weight: 600;
+}
+
+/* ── Restock Alert ── */
+.restock-alert {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--border-radius);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #f87171;
+}
+
+.restock-alert i { font-size: 18px; flex-shrink: 0; }
+
+.restock-count {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--brand-red);
+  margin-right: 4px;
+}
+
+@media (max-width: 992px) { .inventory-layout { grid-template-columns: 1fr; } }

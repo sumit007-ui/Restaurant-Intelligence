@@ -1,168 +1,167 @@
 {% extends "base.html" %}
+{% block title %}Profile – Restaurant Intelligence{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your account and restaurant branding{% endblock %}
 
-{% block title %}Profile - Restaurant Analytics{% endblock %}
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-4">
-            <div class="dashboard-card">
-                <div class="dashboard-card-body text-center">
-                    <div class="mb-4">
-                        <div class="user-image mx-auto" style="width: 100px; height: 100px; font-size: 40px;">
-                            {{ user.username[0] }}
-                        </div>
-                    </div>
-                    <h4>{{ user.username }}</h4>
-                    <p class="text-muted">{{ user.email }}</p>
-                    <div class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }} mb-3">
-                        {{ user.role.capitalize() }}
-                    </div>
-                    <p class="text-muted small">Member since {{ user.created_at.strftime('%b %d, %Y') }}</p>
-                </div>
-            </div>
-            
-            <div class="dashboard-card mt-4">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i data-feather="user-check" class="feather-sm me-2"></i>
-                        Account Details
-                    </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Username</dt>
-                        <dd class="col-sm-8">{{ user.username }}</dd>
-                        
-                        <dt class="col-sm-4">Email</dt>
-                        <dd class="col-sm-8">{{ user.email }}</dd>
-                        
-                        <dt class="col-sm-4">Role</dt>
-                        <dd class="col-sm-8">{{ user.role.capitalize() }}</dd>
-                        
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">#{{ user.id }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-8">
-            <div class="dashboard-card">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i data-feather="activity" class="feather-sm me-2"></i>
-                        Activity Stats
-                    </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="stat-card">
-                                <div class="stat-card-icon bg-primary text-white">
-                                    <i data-feather="file-text"></i>
-                                </div>
-                                <div class="stat-card-content">
-                                    <h5 class="stat-card-value">{{ stats.total_entries }}</h5>
-                                    <p class="stat-card-label">Total Entries</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="stat-card">
-                                <div class="stat-card-icon bg-success text-white">
-                                    <i data-feather="coffee"></i>
-                                </div>
-                                <div class="stat-card-content">
-                                    <h5 class="stat-card-value">{{ stats.dishes_tracked }}</h5>
-                                    <p class="stat-card-label">Dishes Tracked</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="stat-card">
-                                <div class="stat-card-icon bg-info text-white">
-                                    <i data-feather="clock"></i>
-                                </div>
-                                <div class="stat-card-content">
-                                    <h5 class="stat-card-value">
-                                        {% if stats.last_active %}
-                                            {{ stats.last_active.date.strftime('%b %d') }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </h5>
-                                    <p class="stat-card-label">Last Active</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card mt-4">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i data-feather="clock" class="feather-sm me-2"></i>
-                        Recent Activity
-                    </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Dish</th>
-                                    <th>Time of Day</th>
-                                    <th>Quantity Sold</th>
-                                    <th>Quantity Wasted</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for activity in stats.recent_activity %}
-                                <tr>
-                                    <td>{{ activity.date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ activity.dish.name }}</td>
-                                    <td>{{ activity.time_of_day.capitalize() }}</td>
-                                    <td>{{ activity.quantity_sold }}</td>
-                                    <td>{{ activity.quantity_wasted }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No activity found</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dashboard-card mt-4">
-                <div class="dashboard-card-header">
-                    <h5 class="dashboard-card-title">
-                        <i data-feather="settings" class="feather-sm me-2"></i>
-                        Account Settings
-                    </h5>
-                </div>
-                <div class="dashboard-card-body">
-                    <div class="alert alert-info">
-                        <i data-feather="info" class="feather-sm me-2"></i>
-                        Password change functionality will be available in the next update.
-                    </div>
-                    
-                    <div class="d-flex justify-content-end">
-                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
-                            <i data-feather="log-out" class="feather-sm me-1"></i>
-                            Logout
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="profile-layout" data-aos="fade-up">
+
+  <!-- ══ LEFT: User Identity Card ══ -->
+  <div class="profile-avatar-card">
+    <div class="profile-avatar-header">
+      {% if user.restaurant and user.restaurant.logo_url %}
+        <img src="{{ user.restaurant.logo_url }}" alt="Logo"
+             style="width:88px;height:88px;border-radius:22px;object-fit:cover;margin:0 auto 16px;display:block;box-shadow:0 8px 24px rgba(99,102,241,0.3);">
+      {% else %}
+        <div class="profile-avatar-img">{{ user.username[0] }}</div>
+      {% endif %}
+
+      <div class="profile-username">{{ user.username }}</div>
+      <div class="profile-email">
+        <i data-feather="mail" style="width:12px;height:12px;vertical-align:middle;margin-right:4px;"></i>
+        {{ user.email }}
+      </div>
+
+      <span class="profile-role-pill {{ user.role }}">
+        <i data-feather="shield" style="width:11px;height:11px;"></i>
+        {{ user.role.upper() }}
+      </span>
     </div>
+
+    <div class="profile-meta">
+      <div class="profile-meta-row">
+        <span class="profile-meta-label">Restaurant</span>
+        <span class="profile-meta-value">{{ user.restaurant.name if user.restaurant else '—' }}</span>
+      </div>
+      <div class="profile-meta-row">
+        <span class="profile-meta-label">Account Status</span>
+        <span class="profile-meta-value" style="color: var(--brand-green);">
+          <i data-feather="check-circle" style="width:13px;height:13px;vertical-align:middle;margin-right:4px;"></i>
+          Active
+        </span>
+      </div>
+      <div class="profile-meta-row">
+        <span class="profile-meta-label">Member since</span>
+        <span class="profile-meta-value">{{ user.created_at.strftime('%B %Y') }}</span>
+      </div>
+      <div class="profile-meta-row">
+        <span class="profile-meta-label">Plan</span>
+        <span class="profile-meta-value" style="color: var(--brand-accent);">SaaS Professional</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: Branding Panel ══ -->
+  <div class="branding-panel">
+    <div class="ri-card-header" style="background: rgba(99,102,241,0.06);">
+      <div class="ri-card-title">
+        <i data-feather="sliders" style="width:16px;height:16px;color:var(--brand-accent);margin-right:8px;"></i>
+        Restaurant Branding
+      </div>
+      <span class="badge-ri badge-indigo" style="font-size:10px;">PRO FEATURE</span>
+    </div>
+
+    <div class="ri-card-body" style="padding:28px;">
+      {% if user.role in ['admin', 'manager'] %}
+      <form method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data" id="branding-form">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group" style="margin-bottom:20px;">
+          <label class="ri-form-label">{{ form.name.label.text }}</label>
+          {{ form.name(class="ri-form-control", placeholder="Your Restaurant Name", id="brand-name-input") }}
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.primary_color.label.text }}</label>
+            <div class="color-picker-row">
+              <div class="color-swatch">
+                <input type="color" id="colorPicker"
+                       value="{{ user.restaurant.primary_color or '#6366f1' }}"
+                       oninput="syncColor(this.value)">
+              </div>
+              {{ form.primary_color(class="ri-form-control", id="hexInput", placeholder="#6366f1") }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="ri-form-label">{{ form.logo.label.text }}</label>
+            {{ form.logo(class="ri-form-control", id="logo-input") }}
+          </div>
+
+        </div>
+
+        <!-- Live Brand Preview -->
+        <div style="margin-bottom:24px;">
+          <label class="ri-form-label">Live Preview</label>
+          <div class="brand-preview-box" id="brandPreviewBox"
+               style="background: linear-gradient(135deg, {{ user.restaurant.primary_color or '#6366f1' }}, #2575fc);">
+            <div class="brand-preview-logo" id="preview-logo-box">
+              {% if user.restaurant and user.restaurant.logo_url %}
+                <img src="{{ user.restaurant.logo_url }}" alt="logo" style="max-height:44px; border-radius:8px;">
+              {% else %}
+                🍽️
+              {% endif %}
+            </div>
+            <div class="brand-preview-name" id="preview-name">
+              {{ user.restaurant.name if user.restaurant else 'Your Restaurant' }}
+            </div>
+            <div class="brand-preview-tagline">Experience the difference</div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end;">
+          <button type="submit" class="btn-ri btn-ri-primary" id="save-branding-btn">
+            <i data-feather="save" style="width:15px;height:15px;"></i>
+            Save Brand Profile
+          </button>
+        </div>
+      </form>
+
+      {% else %}
+      <div class="empty-state" style="padding:50px 20px;">
+        <div class="empty-state-icon">🔒</div>
+        <div class="empty-state-title">Access Restricted</div>
+        <div class="empty-state-desc">Branding settings are only available to Restaurant Admins and Managers.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+function syncColor(val) {
+  document.getElementById('hexInput').value = val;
+  document.getElementById('brandPreviewBox').style.background =
+    `linear-gradient(135deg, ${val} 0%, #2575fc 100%)`;
+}
+
+const hexInput = document.getElementById('hexInput');
+if (hexInput) {
+  hexInput.addEventListener('input', function() {
+    const v = this.value.trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+      document.getElementById('colorPicker').value = v;
+      document.getElementById('brandPreviewBox').style.background =
+        `linear-gradient(135deg, ${v} 0%, #2575fc 100%)`;
+    }
+  });
+}
+
+const nameInput = document.getElementById('brand-name-input');
+const previewName = document.getElementById('preview-name');
+if (nameInput && previewName) {
+  nameInput.addEventListener('input', function() {
+    previewName.textContent = this.value || 'Your Restaurant';
+  });
+}
+</script>
 {% endblock %}

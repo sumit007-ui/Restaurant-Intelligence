@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: letter;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 15pt;
+            margin-bottom: 25pt;
+        }
+        .logo {
+            max-height: 60pt;
+            margin-bottom: 10pt;
+        }
+        .restaurant-name {
+            font-size: 24pt;
+            font-weight: bold;
+            margin: 0;
+        }
+        .report-title {
+            font-size: 18pt;
+            text-transform: uppercase;
+            letter-spacing: 2pt;
+            color: #666;
+            margin-top: 5pt;
+        }
+        .summary-box {
+            background-color: #f8f9fa;
+            padding: 15pt;
+            border-radius: 8pt;
+            margin-bottom: 20pt;
+        }
+        .stat-grid {
+            width: 100%;
+            margin-bottom: 20pt;
+        }
+        .stat-item {
+            text-align: center;
+            width: 50%;
+        }
+        .stat-label {
+            font-size: 10pt;
+            text-transform: uppercase;
+            color: #888;
+        }
+        .stat-value {
+            font-size: 20pt;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20pt;
+        }
+        th {
+            color: white;
+            text-align: left;
+            padding: 8pt;
+        }
+        td {
+            border-bottom: 1pt solid #eee;
+            padding: 8pt;
+        }
+        .footer {
+            margin-top: 50pt;
+            text-align: center;
+            font-size: 9pt;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header" {{ s.border|safe }}>
+        {% if restaurant.logo_url %}
+        <img src="{{ restaurant.logo_url }}" class="logo">
+        {% endif %}
+        <p class="restaurant-name" {{ s.color|safe }}>{{ restaurant.name }}</p>
+        <p class="report-title">Revenue Analytics Report</p>
+    </div>
+
+    <div class="summary-box">
+        <p style="margin:0; font-weight:bold; color: #444;">REPORT PERIOD: {{ period }}</p>
+        <p style="margin:0; font-size: 10pt; color: #777;">Generated on: {{ report_date }}</p>
+    </div>
+
+    <table class="stat-grid">
+        <tr>
+            <td class="stat-item" style="border:none;">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" {{ s.color|safe }}>₹{{ "{:,.2f}".format(total_revenue) }}</div>
+            </td>
+            <td class="stat-item" style="border:none;">
+                <div class="stat-label">Orders Processed</div>
+                <div class="stat-value" {{ s.color|safe }}>{{ total_orders }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <h3 {{ s.color|safe }} style="border-bottom: 1pt solid #ddd; padding-bottom: 5pt;">TOP PERFORMING DISHES</h3>
+    <table>
+        <thead>
+            <tr>
+                <th {{ s.bg|safe }}>Dish Name</th>
+                <th {{ s.bg|safe }}>Qty Sold</th>
+                <th {{ s.bg|safe }}>Revenue</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for name, qty, revenue in top_selling %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ qty }}</td>
+                <td>₹{{ "{:,.2f}".format(revenue) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>This is a computer-generated report from Restaurant Intelligence SaaS.</p>
+        <p>&copy; 2026 {{ restaurant.name }} | {{ restaurant.address }}</p>
+    </div>
+</body>
+</html>

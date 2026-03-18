@@ -1,54 +1,81 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Restaurant Intelligence</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
 
-{% block title %}Login - Restaurant Analytics{% endblock %}
+<!-- Flash from server -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="flash-message d-none" data-category="{{ category }}" style="display:none;">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
-{% block auth_content %}
-<div class="auth-card">
-    <div class="auth-logo">
-        <img src="{{ url_for('static', filename='svg/logo.svg') }}" alt="Restaurant Analytics">
-    </div>
-    <h2 class="auth-title">Login to your Account</h2>
-    
-    <form class="auth-form needs-validation" method="POST" action="{{ url_for('login') }}" novalidate>
+<div class="auth-page">
+  <!-- Animated background blobs -->
+  <div class="auth-bg-blob auth-bg-blob-1"></div>
+  <div class="auth-bg-blob auth-bg-blob-2"></div>
+  <div class="auth-bg-blob auth-bg-blob-3"></div>
+
+  <div class="auth-card-wrapper">
+    <div class="auth-card">
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-icon">🍽️</div>
+        <div class="auth-logo-text">Restaurant Intelligence</div>
+      </div>
+
+      <h1 class="auth-heading">Welcome back</h1>
+      <p class="auth-subheading">Sign in to your restaurant dashboard</p>
+
+      <form method="POST" action="{{ url_for('login') }}" id="login-form">
         {{ form.hidden_tag() }}
-        
-        <div class="mb-3">
-            <label for="email" class="form-label">Email Address</label>
-            {{ form.email(class="form-control", placeholder="Enter your email", id="email") }}
-            <div class="invalid-feedback">
-                Please enter a valid email address.
-            </div>
-            {% if form.email.errors %}
-                <div class="text-danger">
-                    {% for error in form.email.errors %}
-                        <small>{{ error }}</small>
-                    {% endfor %}
-                </div>
-            {% endif %}
+
+        <div class="auth-field">
+          <label class="auth-label" for="{{ form.username.id }}">Username</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-user auth-input-icon"></i>
+            {{ form.username(class="auth-input", id="login-username", placeholder="Enter your username", autocomplete="username") }}
+          </div>
+          {% for err in form.username.errors %}
+            <span class="auth-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ err }}</span>
+          {% endfor %}
         </div>
-        
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            {{ form.password(class="form-control", placeholder="Enter your password", id="password") }}
-            <div class="invalid-feedback">
-                Please enter your password.
-            </div>
-            {% if form.password.errors %}
-                <div class="text-danger">
-                    {% for error in form.password.errors %}
-                        <small>{{ error }}</small>
-                    {% endfor %}
-                </div>
-            {% endif %}
+
+        <div class="auth-field">
+          <label class="auth-label" for="{{ form.password.id }}">Password</label>
+          <div class="auth-input-wrapper">
+            <i class="fa-solid fa-lock auth-input-icon"></i>
+            {{ form.password(class="auth-input", id="login-password", placeholder="Enter your password", autocomplete="current-password") }}
+          </div>
+          {% for err in form.password.errors %}
+            <span class="auth-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ err }}</span>
+          {% endfor %}
         </div>
-        
-        <div class="d-grid gap-2">
-            {{ form.submit(class="btn btn-primary btn-lg") }}
-        </div>
-    </form>
-    
-    <div class="mt-4 text-center">
-        <p>Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+
+        <button type="submit" class="auth-btn" id="login-submit-btn">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Sign In to Dashboard
+        </button>
+      </form>
+
+      <div class="auth-link-row">
+        Don't have an account? <a href="{{ url_for('register_restaurant') }}">Register your restaurant</a>
+      </div>
     </div>
+  </div>
 </div>
-{% endblock %}
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>feather.replace();</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Inventory – Restaurant Intelligence{% endblock %}
+{% block page_title %}Inventory Control{% endblock %}
+{% block page_subtitle %}Monitor and manage your restaurant's stock levels{% endblock %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventory.css') }}">
+{% endblock %}
+
+{% block content %}
+<div data-aos="fade-up">
+
+  {% set low_items = items|selectattr('quantity', 'le', 'min_stock')|list %}
+  {% set low_count = items|selectattr('quantity')|list|length %}
+
+  <div class="inventory-layout">
+    <!-- ── Add Item Form ── -->
+    <div class="ri-card" style="position: sticky; top: calc(var(--header-height) + 20px); align-self: start;">
+      <div class="ri-card-header" style="background: rgba(99,102,241,0.06);">
+        <div class="ri-card-title">
+          <i data-feather="plus-circle" style="width:16px;height:16px;color:var(--brand-accent);"></i>
+          Add Inventory Item
+        </div>
+      </div>
+      <div class="ri-card-body">
+        <form method="POST" action="{{ url_for('inventory') }}" id="inventory-form">
+          {{ form.hidden_tag() }}
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="ri-form-label">{{ form.name.label.text }}</label>
+            {{ form.name(class="ri-form-control", placeholder="e.g. Tomatoes") }}
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div>
+              <label class="ri-form-label">{{ form.quantity.label.text }}</label>
+              {{ form.quantity(class="ri-form-control", placeholder="0") }}
+            </div>
+            <div>
+              <label class="ri-form-label">{{ form.unit.label.text }}</label>
+              {{ form.unit(class="ri-form-control", placeholder="kg, L, pcs") }}
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div>
+              <label class="ri-form-label">{{ form.min_stock.label.text }}</label>
+              {{ form.min_stock(class="ri-form-control", placeholder="0") }}
+            </div>
+            <div>
+              <label class="ri-form-label">{{ form.cost_per_unit.label.text }}</label>
+              {{ form.cost_per_unit(class="ri-form-control", placeholder="0.00") }}
+            </div>
+          </div>
+          <button type="submit" class="btn-ri btn-ri-primary" style="width:100%; justify-content:center;">
+            <i data-feather="plus" style="width:15px;height:15px;"></i>
+            Add Item
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── Inventory Table ── -->
+    <div>
+      {% set low_count = items|selectattr('quantity', 'le', items[0].min_stock if items else 0)|list|length if items else 0 %}
+
+      <div class="ri-card">
+        <div class="ri-card-header">
+          <div class="ri-card-title">
+            <i data-feather="box" style="width:16px;height:16px;color:var(--brand-accent);"></i>
+            Inventory Control
+          </div>
+          <div class="badge-ri badge-indigo">{{ items|length }} Items</div>
+        </div>
+
+        {% if items %}
+        <div style="overflow-x:auto;">
+          <table class="ri-table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Stock Level</th>
+                <th>Cost/Unit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              {% set pct = [(item.quantity / (item.min_stock * 2) * 100)|int, 100]|min if item.min_stock > 0 else 100 %}
+              <tr {% if item.quantity <= item.min_stock %}class="low-stock"{% endif %}>
+                <td>
+                  <div style="font-weight:600; color:var(--text-primary);">{{ item.name }}</div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                    Last updated: {{ item.last_updated.strftime('%b %d') if item.last_updated else 'N/A' }}
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight:700; color:var(--text-primary);">{{ item.quantity }} <span style="color:var(--text-muted); font-weight:400; font-size:12px;">{{ item.unit }}</span></div>
+                  <div class="stock-bar-wrapper">
+                    <div class="stock-bar">
+                      <div class="stock-bar-fill {% if item.quantity <= item.min_stock %}critical{% elif pct < 60 %}low{% else %}healthy{% endif %}"
+                           style="width: {{ pct }}%;"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="cost-cell">₹{{ "%.2f"|format(item.cost_per_unit|default(0.0)) }}</td>
+                <td>
+                  {% if item.quantity <= item.min_stock %}
+                    <span class="badge-ri badge-red"><i data-feather="alert-triangle" style="width:11px;height:11px;"></i> Low Stock</span>
+                  {% else %}
+                    <span class="badge-ri badge-green"><i data-feather="check-circle" style="width:11px;height:11px;"></i> Healthy</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <div class="empty-state-title">No inventory items yet</div>
+          <div class="empty-state-desc">Start tracking your stock by adding items using the form on the left.</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
